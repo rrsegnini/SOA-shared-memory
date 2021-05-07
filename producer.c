@@ -24,3 +24,66 @@ se debe desplegar un mensaje a la consola describiendo la acción realizada inc
 ı́ndice de la entrada donde se dejó el mensaje y la cantidad de productores y consumidores 
 vivos al instante de este evento.
 */
+
+/* 
+pshm_ucase_send.c
+Licensed under GNU General Public License v2 or later.
+*/
+#include <time.h>
+#include <string.h>
+#include "pshm_ucase.h"
+
+int
+main(int argc, char *argv[])
+{
+    time_t t;
+    srand((unsigned) time(&t));
+
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s /shm-path string\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    char *shmpath = argv[1];
+    char *string = argv[1];
+    // char string[20];
+    time_t now = time(NULL);
+    size_t len = strlen(string);
+
+    if (len > BUF_SIZE) {
+        fprintf(stderr, "String is too long\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Open the existing shared memory object and map it
+        into the caller's address space. */
+
+    int fd = shm_open(shmpath, O_RDWR, 0);
+    if (fd == -1)
+        errExit("shm_open");
+
+    struct shmbuf *shmp = mmap(NULL, sizeof(*shmp),
+                                PROT_READ | PROT_WRITE,
+                                MAP_SHARED, fd, 0);
+    if (shmp == MAP_FAILED)
+        errExit("mmap");
+
+    while (1){
+        // strftime(string, 20, "%M:%S", localtime(&now));
+        /* Copy data into the shared memory object. */
+
+        shmp->cnt = len;
+        memcpy(&shmp->buf, string, len);
+
+        /* Tell peer that it can now access shared memory. */
+
+        if (sem_post(&shmp->sem1) == -1)
+            errExit("sem_post");
+
+        sleep(rand() % 5);
+        
+    }
+    
+
+    exit(EXIT_SUCCESS);
+}
