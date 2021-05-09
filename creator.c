@@ -72,6 +72,10 @@ main(int argc, char *argv[])
     if (sem_init(&shmp->sem3, 1, shmp->BUF_SIZE) == -1){
         errExit("sem_init-sem3");
     }
+
+    if (sem_init(&shmp->sem4, 1, 0) == -1){
+        errExit("sem_init-sem4");
+    }
         
     while (1){
         /* Wait for 'sem1' to be posted by peer before touching
@@ -95,13 +99,6 @@ main(int argc, char *argv[])
             if (j == shmp->BUF_SIZE) j = 0;
 
         }
-        // for (int j = shmp->hd; j < shmp->hd+shmp->cnt; j++){
-        //     struct tm * timeinfo;
-        //     char buff[20]; 
-        //     timeinfo = localtime(&shmp->buf[j].t); 
-        //     strftime(buff, 20, "%T", timeinfo); 
-        //     fprintf(stderr, "%d %s\n", shmp->buf[j].id, buff);
-        // }
         fprintf(stderr, "\n\n\n");
         
         if (sem_post(&shmp->sem2) == -1){

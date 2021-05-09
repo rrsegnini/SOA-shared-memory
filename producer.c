@@ -90,6 +90,9 @@ main(int argc, char *argv[])
         /* Tell peer that it can now access shared memory. */
         if (sem_post(&shmp->sem1) == -1)
             errExit("sem_post");
+        
+        if (sem_post(&shmp->sem4) == -1)
+            errExit("sem_post");
        
 
         sleep(rand() % 10);

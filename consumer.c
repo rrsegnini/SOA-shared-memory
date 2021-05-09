@@ -69,12 +69,20 @@ main(int argc, char *argv[])
     while (1){
         /* Wait until peer says that it has finished accessing
             the shared memory. */
+        
+        if (shmp->cnt == 0){
+            if (sem_wait(&shmp->sem4) == -1){
+                errExit("sem_wait");
+            }
+        } 
 
         if (sem_wait(&shmp->sem2) == -1){
             errExit("sem_wait");
         }
 
-        if (shmp->cnt > 0){ // TODO: use semaphore
+        
+       
+        // if (shmp->cnt > 0){ // TODO: use semaphore
             fprintf(stderr, "head: %d tail: %d\n", shmp->hd, shmp->tl);
             struct tm * timeinfo;
             char buff[20]; 
@@ -95,7 +103,7 @@ main(int argc, char *argv[])
 
             if (sem_post(&shmp->sem3) == -1)
                 errExit("sem_post");
-        }
+        // }
 
              
         if (sem_post(&shmp->sem1) == -1){
