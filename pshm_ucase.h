@@ -29,5 +29,6 @@ struct shmbuf {
     int          tl;              /* Out pointer */ 
     int          cnt;             /* Number of messages */
     int          BUF_SIZE;
+    int          exit;
     struct msg   buf[];   /* Data being transferred */
 };

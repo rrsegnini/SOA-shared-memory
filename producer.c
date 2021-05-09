@@ -63,6 +63,10 @@ main(int argc, char *argv[])
     struct msg msg1;
     
     while (1){
+        if (shmp->exit){
+            break;
+        }
+        
         msg1.id = getpid();
         msg1.t = time(NULL);
         msg1.key = rand() % 5;

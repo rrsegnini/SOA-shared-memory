@@ -69,6 +69,10 @@ main(int argc, char *argv[])
     while (1){
         /* Wait until peer says that it has finished accessing
             the shared memory. */
+
+        if (shmp->exit){
+            break;
+        }
         
         if (shmp->cnt == 0){
             if (sem_wait(&shmp->sem4) == -1){
@@ -82,28 +86,30 @@ main(int argc, char *argv[])
 
         
        
-        // if (shmp->cnt > 0){ // TODO: use semaphore
-            fprintf(stderr, "head: %d tail: %d\n", shmp->hd, shmp->tl);
-            struct tm * timeinfo;
-            char buff[20]; 
-            timeinfo = localtime(&shmp->buf[shmp->hd].t);
-            strftime(buff, 20, "%T", timeinfo); 
-            fprintf(stderr, "Read! %d %s %d\n", shmp->buf[shmp->hd].id, buff, shmp->buf[shmp->hd].key);
-            fprintf(stderr, "\n\n\n");
+        fprintf(stderr, "head: %d tail: %d\n", shmp->hd, shmp->tl);
+        struct tm * timeinfo;
+        char buff[20]; 
+        timeinfo = localtime(&shmp->buf[shmp->hd].t);
+        strftime(buff, 20, "%T", timeinfo); 
+        fprintf(stderr, "Read! %d %s %d\n", shmp->buf[shmp->hd].id, buff, shmp->buf[shmp->hd].key);
+        fprintf(stderr, "\n\n\n");
 
-            if (shmp->buf[shmp->hd].key == breaker){
-                sbreak = 1;
-            }
+        if (shmp->buf[shmp->hd].key == breaker){
+            sbreak = 1;
+        }
 
-            shmp->hd++;
-            if (shmp->hd == shmp->BUF_SIZE){
-                shmp->hd = 0;
-            }
+        shmp->hd++;
+        if (shmp->hd == shmp->BUF_SIZE){
+            shmp->hd = 0;
+        }
+
+        if (shmp->cnt > 0){
             shmp->cnt = shmp->cnt-1;
+        }
+        
 
-            if (sem_post(&shmp->sem3) == -1)
-                errExit("sem_post");
-        // }
+        if (sem_post(&shmp->sem3) == -1)
+            errExit("sem_post");
 
              
         if (sem_post(&shmp->sem1) == -1){

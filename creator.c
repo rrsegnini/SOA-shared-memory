@@ -59,6 +59,7 @@ main(int argc, char *argv[])
         errExit("mmap");
 
     shmp->BUF_SIZE = buff_size;
+    shmp->exit = 0;
     /* Initialize semaphores as process-shared, with value 0. */
 
     if (sem_init(&shmp->sem1, 1, 0) == -1){
@@ -78,6 +79,9 @@ main(int argc, char *argv[])
     }
         
     while (1){
+        if (shmp->exit){
+            break;
+        }
         /* Wait for 'sem1' to be posted by peer before touching
             shared memory. */
 
@@ -85,15 +89,21 @@ main(int argc, char *argv[])
             errExit("sem_wait");
         }
         
-        fprintf(stderr, "head: %d tail: %d\n", shmp->hd, shmp->tl);
+        
         int j = shmp->hd;
         int cont = shmp->cnt;
+        if (cont < 0){
+            fprintf(stderr, "cont:%d\n", cont);
+            break;
+        } 
         struct tm * timeinfo;
         char buff[20]; 
+
+        fprintf(stderr, "head: %d tail: %d cont:%d\n", shmp->hd, shmp->tl, cont);
         while (cont != 0){          
             timeinfo = localtime(&shmp->buf[j].t); 
             strftime(buff, 20, "%T", timeinfo); 
-            fprintf(stderr, "%d %s %d\n", shmp->buf[j].id, buff, shmp->buf[j].key);
+            fprintf(stderr, "%d %s %d %d\n", shmp->buf[j].id, buff, shmp->buf[j].key, cont);
             cont--;
             j++;
             if (j == shmp->BUF_SIZE) j = 0;
