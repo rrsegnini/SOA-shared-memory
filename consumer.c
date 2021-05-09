@@ -51,11 +51,6 @@ main(int argc, char *argv[])
     char *string = argv[2];
     size_t len = strlen(string);
 
-    if (len > BUF_SIZE) {
-        fprintf(stderr, "String is too long\n");
-        exit(EXIT_FAILURE);
-    }
-
     /* Open the existing shared memory object and map it
         into the caller's address space. */
 
@@ -68,20 +63,52 @@ main(int argc, char *argv[])
                                 MAP_SHARED, fd, 0);
     if (shmp == MAP_FAILED)
         errExit("mmap");
+    int sbreak = 0;
+    int breaker = getpid() % 5;
+    fprintf(stderr, "%d\n", breaker);
     while (1){
         /* Wait until peer says that it has finished accessing
             the shared memory. */
 
-        if (sem_wait(&shmp->sem2) == -1)
+        if (sem_wait(&shmp->sem2) == -1){
             errExit("sem_wait");
+        }
 
-        /* Write modified data in shared memory to standard output. */
+        if (shmp->cnt > 0){ // TODO: use semaphore
+            fprintf(stderr, "head: %d tail: %d\n", shmp->hd, shmp->tl);
+            struct tm * timeinfo;
+            char buff[20]; 
+            timeinfo = localtime(&shmp->buf[shmp->hd].t);
+            strftime(buff, 20, "%T", timeinfo); 
+            fprintf(stderr, "Read! %d %s %d\n", shmp->buf[shmp->hd].id, buff, shmp->buf[shmp->hd].key);
+            fprintf(stderr, "\n\n\n");
 
-        write(STDOUT_FILENO, &shmp->buf, len);
-        write(STDOUT_FILENO, "\n", 1);
-        
-        sleep(rand() % 5);
+            if (shmp->buf[shmp->hd].key == breaker){
+                sbreak = 1;
+            }
+
+            shmp->hd++;
+            if (shmp->hd == shmp->BUF_SIZE){
+                shmp->hd = 0;
+            }
+            shmp->cnt = shmp->cnt-1;
+
+            if (sem_post(&shmp->sem3) == -1)
+                errExit("sem_post");
+        }
+
+             
+        if (sem_post(&shmp->sem1) == -1){
+            errExit("sem_post");
+        }
+
+
+        if (sbreak==1) break;
+
+        sleep(rand() % 10);
     }
+
+    fprintf(stderr, "Bye!\n");
     
 
     exit(EXIT_SUCCESS);

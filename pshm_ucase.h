@@ -9,14 +9,24 @@
 #define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \
                         } while (0)
 
-#define BUF_SIZE 1024   /* Maximum size for exchanged string */
+extern int BUF_SIZE;   /* Maximum size for exchanged string */
 
 /* Define a structure that will be imposed on the shared
     memory object */
 
+struct msg {
+    int id; /* Producer id */
+    time_t t; /* Creation datetime */
+    int key; /* Random key between 0 and 4 id */
+};
+
 struct shmbuf {
-    sem_t  sem1;            /* POSIX unnamed semaphore */
-    sem_t  sem2;            /* POSIX unnamed semaphore */
-    size_t cnt;             /* Number of bytes used in 'buf' */
-    char   buf[BUF_SIZE];   /* Data being transferred */
+    sem_t        sem1;            /* POSIX unnamed semaphore */
+    sem_t        sem2;            /* POSIX unnamed semaphore */
+    sem_t        sem3;            /* POSIX unnamed semaphore */
+    int          hd;              /* In pointer */
+    int          tl;              /* Out pointer */ 
+    int          cnt;             /* Number of messages */
+    int          BUF_SIZE;
+    struct msg   buf[];   /* Data being transferred */
 };

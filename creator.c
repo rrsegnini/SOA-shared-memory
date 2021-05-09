@@ -21,6 +21,7 @@ el creador seguirá vivo para poder examinar esta bitácora.
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include <ctype.h>
 #include "pshm_ucase.h"
@@ -34,6 +35,7 @@ main(int argc, char *argv[])
     }
 
     char *shmpath = argv[1];
+    int buff_size = atoi(argv[2]);
 
     shm_unlink(shmpath);
 
@@ -56,17 +58,21 @@ main(int argc, char *argv[])
     if (shmp == MAP_FAILED)
         errExit("mmap");
 
+    shmp->BUF_SIZE = buff_size;
     /* Initialize semaphores as process-shared, with value 0. */
 
     if (sem_init(&shmp->sem1, 1, 0) == -1){
         errExit("sem_init-sem1");
     }
         
-    if (sem_init(&shmp->sem2, 1, 0) == -1){
+    if (sem_init(&shmp->sem2, 1, 1) == -1){
         errExit("sem_init-sem2");
     }
-        
 
+    if (sem_init(&shmp->sem3, 1, shmp->BUF_SIZE) == -1){
+        errExit("sem_init-sem3");
+    }
+        
     while (1){
         /* Wait for 'sem1' to be posted by peer before touching
             shared memory. */
@@ -74,18 +80,30 @@ main(int argc, char *argv[])
         if (sem_wait(&shmp->sem1) == -1){
             errExit("sem_wait");
         }
-            
+        
+        fprintf(stderr, "head: %d tail: %d\n", shmp->hd, shmp->tl);
+        int j = shmp->hd;
+        int cont = shmp->cnt;
+        struct tm * timeinfo;
+        char buff[20]; 
+        while (cont != 0){          
+            timeinfo = localtime(&shmp->buf[j].t); 
+            strftime(buff, 20, "%T", timeinfo); 
+            fprintf(stderr, "%d %s %d\n", shmp->buf[j].id, buff, shmp->buf[j].key);
+            cont--;
+            j++;
+            if (j == shmp->BUF_SIZE) j = 0;
 
-        /* Convert data in shared memory into upper case. */
-
-        for (int j = 0; j < shmp->cnt; j++){
-            shmp->buf[j] = toupper((unsigned char) shmp->buf[j]);
         }
-           
-
-        /* Post 'sem2' to tell the to tell peer that it can now
-            access the modified data in shared memory. */
-
+        // for (int j = shmp->hd; j < shmp->hd+shmp->cnt; j++){
+        //     struct tm * timeinfo;
+        //     char buff[20]; 
+        //     timeinfo = localtime(&shmp->buf[j].t); 
+        //     strftime(buff, 20, "%T", timeinfo); 
+        //     fprintf(stderr, "%d %s\n", shmp->buf[j].id, buff);
+        // }
+        fprintf(stderr, "\n\n\n");
+        
         if (sem_post(&shmp->sem2) == -1){
             errExit("sem_post");
         }

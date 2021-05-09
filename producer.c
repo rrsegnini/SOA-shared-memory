@@ -45,18 +45,10 @@ main(int argc, char *argv[])
     }
 
     char *shmpath = argv[1];
-    char *string = argv[1];
-    // char string[20];
+    char *string = argv[2];
+    
     time_t now = time(NULL);
     size_t len = strlen(string);
-
-    if (len > BUF_SIZE) {
-        fprintf(stderr, "String is too long\n");
-        exit(EXIT_FAILURE);
-    }
-
-    /* Open the existing shared memory object and map it
-        into the caller's address space. */
 
     int fd = shm_open(shmpath, O_RDWR, 0);
     if (fd == -1)
@@ -67,20 +59,40 @@ main(int argc, char *argv[])
                                 MAP_SHARED, fd, 0);
     if (shmp == MAP_FAILED)
         errExit("mmap");
-
+    
+    struct msg msg1;
+    
     while (1){
-        // strftime(string, 20, "%M:%S", localtime(&now));
-        /* Copy data into the shared memory object. */
+        msg1.id = getpid();
+        msg1.t = time(NULL);
+        msg1.key = rand() % 5;
 
-        shmp->cnt = len;
-        memcpy(&shmp->buf, string, len);
+        if (sem_wait(&shmp->sem3) == -1){
+            errExit("sem_wait");
+        }
+
+        if (sem_wait(&shmp->sem2) == -1){
+            errExit("sem_wait");
+        }
+
+        shmp->buf[shmp->tl] = msg1;
+        fprintf(stderr, "Message posted!\n Position: %d \n PID:%d\n", shmp->tl, msg1.id);
+        
+        shmp->tl++;
+        if (shmp->tl == shmp->BUF_SIZE){
+            shmp->tl = 0;
+        }
+
+        shmp->cnt++;
+
+       
 
         /* Tell peer that it can now access shared memory. */
-
         if (sem_post(&shmp->sem1) == -1)
             errExit("sem_post");
+       
 
-        sleep(rand() % 5);
+        sleep(rand() % 10);
         
     }
     
