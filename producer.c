@@ -27,7 +27,13 @@ vivos al instante de este evento.
 
 #include <time.h>
 #include <string.h>
-#include "pshm_ucase.h"
+#include "pshm.h"
+
+int logged;
+int cnt_msgs;
+double cnt_tms;
+int cnt_smp;
+
 
 int
 main(int argc, char *argv[])
@@ -63,6 +69,9 @@ main(int argc, char *argv[])
         msg1.t = time(NULL);
         msg1.key = rand() % 5;
 
+        time_t bef_sem;
+        time(&bef_sem);
+
         if (sem_wait(&shmp->sem3) == -1){
             errExit("sem_wait");
         }
@@ -71,12 +80,22 @@ main(int argc, char *argv[])
             errExit("sem_wait");
         }
 
+        time_t aft_sem;
+        time(&aft_sem);
+        int seconds = difftime(aft_sem, bef_sem);
+        cnt_smp += seconds;
+
         // Add to log
+        if (!logged){
+            shmp->cnt_prd++;
+            logged=1;
+        }
         shmp->log[shmp->cnt_gbl] = msg1;
         shmp->cnt_gbl++;
+        cnt_msgs++;
 
         shmp->buf[shmp->tl] = msg1;
-        fprintf(stderr, "Message posted!\n Position: %d \n PID:%d\n", shmp->tl, msg1.id);
+        fprintf(stderr, "Message posted by %d!\n Position: %d \n Producers:%d Consumers:%d\n", getpid(), shmp->tl, shmp->cnt_prd, shmp->cnt_csm);
         
         shmp->tl++;
         if (shmp->tl == shmp->BUF_SIZE){
@@ -94,10 +113,13 @@ main(int argc, char *argv[])
         if (sem_post(&shmp->sem4) == -1)
             errExit("sem_post");
        
-
-        sleep(ran_expo((double)mean));
+        double wait = ran_expo((double)mean);
+        cnt_tms += wait;
+        sleep(wait);
         
     }
+
+    fprintf(stderr, "\n\t**SUMMARY**\n\tMessages: %d\n\tWaited time: %f\n\tBlocked time: %d\n\nBye!\n", cnt_msgs, cnt_tms, cnt_smp);
     
 
     exit(EXIT_SUCCESS);

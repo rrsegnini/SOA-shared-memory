@@ -28,7 +28,7 @@ el creador seguirá vivo para poder examinar esta bitácora.
 #include <math.h>
 
 #include <ctype.h>
-#include "pshm_ucase.h"
+#include "pshm.h"
 
 typedef struct 
 {

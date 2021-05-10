@@ -19,7 +19,7 @@ posibles de su gestión.
 #include <time.h>
 
 #include <ctype.h>
-#include "pshm_ucase.h"
+#include "pshm.h"
 
 int
 main(int argc, char *argv[])
@@ -31,9 +31,6 @@ main(int argc, char *argv[])
 
     char *shmpath = argv[1];
 
-    /* Create shared memory object and set its size to the size
-        of our structure. */
-
     int fd = shm_open(shmpath, O_RDWR, 0);
     if (fd == -1)
         errExit("shm_open");
@@ -44,28 +41,23 @@ main(int argc, char *argv[])
     if (shmp == MAP_FAILED)
         errExit("mmap");
 
-    
-    /* Wait for 'sem1' to be posted by peer before touching
-        shared memory. */
-
-    // if (sem_wait(&shmp->sem1) == -1){
-    //     errExit("sem_wait");
-    // }
-    
     shmp->exit = 1;
     
-    if (sem_post(&shmp->sem1) == -1){
-        errExit("sem_post");
+    for (int i = 0; i<10; i++){
+        if (sem_post(&shmp->sem1) == -1){
+                errExit("sem_post");
+        }
+        if (sem_post(&shmp->sem2) == -1){
+            errExit("sem_post");
+        }
+        if (sem_post(&shmp->sem3) == -1){
+            errExit("sem_post");
+        }
+        if (sem_post(&shmp->sem4) == -1){
+            errExit("sem_post");
+        }
     }
-    if (sem_post(&shmp->sem2) == -1){
-        errExit("sem_post");
-    }
-    if (sem_post(&shmp->sem3) == -1){
-        errExit("sem_post");
-    }
-    if (sem_post(&shmp->sem4) == -1){
-        errExit("sem_post");
-    }
+    
             
     
 

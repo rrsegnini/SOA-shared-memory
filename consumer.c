@@ -34,7 +34,12 @@ productores y consumidores vivos al instante de este evento).
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pshm_ucase.h"
+#include "pshm.h"
+
+int logged;
+int cnt_msgs;
+double cnt_tms;
+int cnt_smp;
 
 int
 main(int argc, char *argv[])
@@ -69,9 +74,10 @@ main(int argc, char *argv[])
         /* Wait until peer says that it has finished accessing
             the shared memory. */
 
-        if (shmp->exit){
-            break;
-        }
+        
+
+        time_t bef_sem;
+        time(&bef_sem);
         
         if (shmp->cnt == 0){
             if (sem_wait(&shmp->sem4) == -1){
@@ -82,18 +88,36 @@ main(int argc, char *argv[])
         if (sem_wait(&shmp->sem2) == -1){
             errExit("sem_wait");
         }
-       
-        fprintf(stderr, "head: %d tail: %d\n", shmp->hd, shmp->tl);
+
+        time_t aft_sem;
+        time(&aft_sem);
+        int seconds = difftime(aft_sem, bef_sem);
+        cnt_smp += seconds;
+
+        //Log consumer creation
+        if (!logged){
+            shmp->cnt_csm++;
+            logged=1;
+        }
+
+
+        if (shmp->exit){
+            shmp->cnt_csm = shmp->cnt_csm - 1;
+            break;
+        }
+        
         struct tm * timeinfo;
         char buff[20]; 
         timeinfo = localtime(&shmp->buf[shmp->hd].t);
         strftime(buff, 20, "%T", timeinfo); 
-        fprintf(stderr, "Read! %d %s %d\n", shmp->buf[shmp->hd].id, buff, shmp->buf[shmp->hd].key);
-        fprintf(stderr, "\n\n\n");
+        fprintf(stderr, "Read message at position %d: PID:%d Time:%s Key:%d\n", shmp->hd, shmp->buf[shmp->hd].id, buff, shmp->buf[shmp->hd].key);
+        fprintf(stderr, "\n");
 
         if (shmp->buf[shmp->hd].key == breaker){
             sbreak = 1;
         }
+
+        cnt_msgs++;
 
         shmp->hd++;
         if (shmp->hd == shmp->BUF_SIZE){
@@ -114,12 +138,16 @@ main(int argc, char *argv[])
         }
 
 
-        if (sbreak==1) break;
-
-        sleep(ran_expo((double)mean));
+        if (sbreak==1){
+            break;
+        }
+    
+        double wait = ran_expo((double)mean);
+        cnt_tms += wait;
+        sleep(wait);
     }
 
-    fprintf(stderr, "Bye!\n");
+    fprintf(stderr, "\n\t**SUMMARY**\n\tMessages: %d\n\tWaited time: %f\n\tBlocked time: %d\n\nBye!\n", cnt_msgs, cnt_tms, cnt_smp);
     
 
     exit(EXIT_SUCCESS);
