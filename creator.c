@@ -39,13 +39,41 @@ typedef struct
     int buff_size;
 } t_args;
 
-void set_headers(GtkWidget *table){
+void set_headers(GtkWidget *table, char *name, int hd, int tl, int print_buff_info){
     GtkWidget *pid_lbl;
     GtkWidget *datetime_lbl;
     GtkWidget *key_lbl;
-    pid_lbl = gtk_label_new ("PID");
-    datetime_lbl = gtk_label_new ("Datetime");
-    key_lbl = gtk_label_new ("Key");
+    char str[30];
+    if (print_buff_info){
+        sprintf(str, "In:%d\nPID", hd);
+        pid_lbl = gtk_label_new (str);
+        sprintf(str, "%s\nDatetime", name);
+        datetime_lbl = gtk_label_new (str);
+        sprintf(str, "Out:%d\nKey", tl);
+        key_lbl = gtk_label_new (str);
+        
+    } else {
+        pid_lbl = gtk_label_new ("\nPID");
+        key_lbl = gtk_label_new ("\nKey");
+        datetime_lbl = gtk_label_new ("\nDatetime");
+    }
+    
+
+    gtk_widget_show (pid_lbl);
+    gtk_widget_show (datetime_lbl);
+    gtk_widget_show (key_lbl);
+    gtk_table_attach_defaults (GTK_TABLE (table), pid_lbl, 0, 1, 0, 1);
+    gtk_table_attach_defaults (GTK_TABLE (table), datetime_lbl, 1, 2, 0, 1);
+    gtk_table_attach_defaults (GTK_TABLE (table), key_lbl, 2, 3, 0, 1);
+}
+
+void set_waiting_screen(GtkWidget *table){
+    GtkWidget *pid_lbl;
+    GtkWidget *datetime_lbl;
+    GtkWidget *key_lbl;
+    pid_lbl = gtk_label_new ("Waiting");
+    datetime_lbl = gtk_label_new ("for producers");
+    key_lbl = gtk_label_new ("...");
     gtk_widget_show (pid_lbl);
     gtk_widget_show (datetime_lbl);
     gtk_widget_show (key_lbl);
@@ -130,9 +158,8 @@ void *read_buf(void *args){
         struct tm * timeinfo;
         char buff[20]; 
         char str[30];
-        sprintf(str, "head: %d\ttail: %d\tcont:%d\n\n", shmp->hd, shmp->tl, cont);
         table = gtk_table_new (data->buff_size, 2, TRUE); 
-        set_headers(table);
+        set_headers(table, shmpath, shmp->hd, shmp->tl, 1);
         while (cont != 0){         
             timeinfo = localtime(&shmp->buf[j].t); 
             strftime(buff, 20, "%T", timeinfo); 
@@ -180,7 +207,7 @@ void *read_buf(void *args){
 
         scroll_wndw = gtk_scrolled_window_new(NULL, NULL);
         logs = gtk_table_new (data->buff_size, 2, TRUE); 
-        set_headers(logs);
+        set_headers(logs, shmpath, 0, 0, 0);
         char buff_logs[20]; 
         char str_logs[30];
         for (int l=0; l<shmp->cnt_gbl; l++){
@@ -281,7 +308,7 @@ main(int argc, char *argv[])
     gtk_table_attach_defaults (GTK_TABLE (grid), table, 0, 1, 0, 1);
     gtk_container_add (GTK_CONTAINER (window), grid);
     // Set headers
-    set_headers(table);
+    set_waiting_screen(grid);
     
     /* show everything */
     gtk_widget_show (table);
