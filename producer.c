@@ -60,11 +60,7 @@ main(int argc, char *argv[])
     
     struct msg msg1;
     
-    while (1){
-        if (shmp->exit){
-            break;
-        }
-        
+    while (1){        
         msg1.id = getpid();
         msg1.t = time(NULL);
         msg1.key = rand() % 5;
@@ -90,6 +86,17 @@ main(int argc, char *argv[])
             shmp->cnt_prd++;
             logged=1;
         }
+
+        if (shmp->exit){
+            shmp->cnt_prd = shmp->cnt_prd - 1;
+            if (sem_post(&shmp->sem1) == -1)
+                errExit("sem_post");
+        
+            if (sem_post(&shmp->sem4) == -1)
+                errExit("sem_post");
+            break;
+        }
+
         shmp->log[shmp->cnt_gbl] = msg1;
         shmp->cnt_gbl++;
         cnt_msgs++;
@@ -112,6 +119,7 @@ main(int argc, char *argv[])
        
         double wait = ran_expo((double)mean);
         cnt_tms += wait;
+        fprintf(stderr, "\nSleeping for: %f\n", wait);
         sleep(wait);
         
     }

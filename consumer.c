@@ -97,6 +97,12 @@ main(int argc, char *argv[])
 
         if (shmp->exit){
             shmp->cnt_csm = shmp->cnt_csm - 1;
+            if (sem_post(&shmp->sem3) == -1)
+                errExit("sem_post");
+             
+            if (sem_post(&shmp->sem1) == -1){
+                errExit("sem_post");
+            }
             break;
         }
 
@@ -108,6 +114,7 @@ main(int argc, char *argv[])
         fprintf(stderr, "\n");
 
         if (shmp->buf[shmp->hd].key == breaker){
+            shmp->cnt_csm = shmp->cnt_csm - 1;
             sbreak = 1;
         }
 
@@ -138,6 +145,7 @@ main(int argc, char *argv[])
     
         double wait = ran_expo((double)mean);
         cnt_tms += wait;
+        fprintf(stderr, "\nSleeping for: %f\n", wait);
         sleep(wait);
     }
 

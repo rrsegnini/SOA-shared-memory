@@ -42,8 +42,32 @@ main(int argc, char *argv[])
         errExit("mmap");
 
     shmp->exit = 1;
+
+    if (sem_post(&shmp->sem1) == -1){
+                errExit("sem_post");
+    }
+    if (sem_post(&shmp->sem2) == -1){
+        errExit("sem_post");
+    }
+    if (sem_post(&shmp->sem3) == -1){
+        errExit("sem_post");
+    }
+    if (sem_post(&shmp->sem4) == -1){
+        errExit("sem_post");
+    }
     
-    for (int i = 0; i<10; i++){
+    int prd = shmp->cnt_prd;
+    int csm = shmp->cnt_csm;
+    while (prd != 0 || csm != 0){
+        if (prd != shmp->cnt_prd){
+            fprintf(stderr, "\n Consumers: %d\n Producers:%d\n", shmp->cnt_csm, shmp->cnt_prd);
+            prd = shmp->cnt_prd;
+        }
+        if (csm != shmp->cnt_csm){
+            fprintf(stderr, "\n Consumers: %d\n Producers:%d\n", shmp->cnt_csm, shmp->cnt_prd);
+            csm = shmp->cnt_csm;
+        }
+        
         if (sem_post(&shmp->sem1) == -1){
                 errExit("sem_post");
         }
@@ -56,6 +80,8 @@ main(int argc, char *argv[])
         if (sem_post(&shmp->sem4) == -1){
             errExit("sem_post");
         }
+        sleep(1);
+        
     }
 
     /* Unlink the shared memory object. Even if the peer process
