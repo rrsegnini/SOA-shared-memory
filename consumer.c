@@ -57,7 +57,6 @@ main(int argc, char *argv[])
 
     /* Open the existing shared memory object and map it
         into the caller's address space. */
-
     int fd = shm_open(shmpath, O_RDWR, 0);
     if (fd == -1)
         errExit("shm_open");
@@ -71,11 +70,6 @@ main(int argc, char *argv[])
     int breaker = getpid() % 5;
     fprintf(stderr, "%d\n", breaker);
     while (1){
-        /* Wait until peer says that it has finished accessing
-            the shared memory. */
-
-        
-
         time_t bef_sem;
         time(&bef_sem);
         
@@ -105,7 +99,7 @@ main(int argc, char *argv[])
             shmp->cnt_csm = shmp->cnt_csm - 1;
             break;
         }
-        
+
         struct tm * timeinfo;
         char buff[20]; 
         timeinfo = localtime(&shmp->buf[shmp->hd].t);

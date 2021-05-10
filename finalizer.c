@@ -57,14 +57,10 @@ main(int argc, char *argv[])
             errExit("sem_post");
         }
     }
-    
-            
-    
 
     /* Unlink the shared memory object. Even if the peer process
         is still using the object, this is okay. The object will
         be removed only after all open references are closed. */
-
     shm_unlink(shmpath);
 
     exit(EXIT_SUCCESS);

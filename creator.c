@@ -233,10 +233,6 @@ void *read_buf(void *args){
         }
         gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW (scroll_wndw), logs);
 
-        // gtk_table_attach_defaults (GTK_TABLE (grid), name_ttl, 0, 1, 0, 1);
-        // gtk_table_attach_defaults (GTK_TABLE (grid), table, 0, 1, 1, 2);
-        // gtk_table_attach_defaults (GTK_TABLE (grid), log_ttl, 1, 2, 0, 1);
-        // gtk_table_attach_defaults (GTK_TABLE (grid), scroll_wndw, 1, 2, 1, 2);
         gtk_table_attach_defaults (GTK_TABLE (grid), table, 0, 1, 0, 1);
         gtk_table_attach_defaults (GTK_TABLE (grid), scroll_wndw, 2, 3, 0, 1);
 

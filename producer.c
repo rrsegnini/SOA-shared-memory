@@ -104,9 +104,6 @@ main(int argc, char *argv[])
 
         shmp->cnt++;
 
-       
-
-        /* Tell peer that it can now access shared memory. */
         if (sem_post(&shmp->sem1) == -1)
             errExit("sem_post");
         
