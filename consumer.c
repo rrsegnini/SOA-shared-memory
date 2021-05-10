@@ -48,8 +48,7 @@ main(int argc, char *argv[])
     }
 
     char *shmpath = argv[1];
-    char *string = argv[2];
-    size_t len = strlen(string);
+    int mean = atoi(argv[2]);
 
     /* Open the existing shared memory object and map it
         into the caller's address space. */
@@ -83,8 +82,6 @@ main(int argc, char *argv[])
         if (sem_wait(&shmp->sem2) == -1){
             errExit("sem_wait");
         }
-
-        
        
         fprintf(stderr, "head: %d tail: %d\n", shmp->hd, shmp->tl);
         struct tm * timeinfo;
@@ -119,7 +116,7 @@ main(int argc, char *argv[])
 
         if (sbreak==1) break;
 
-        sleep(rand() % 10);
+        sleep(ran_expo((double)mean));
     }
 
     fprintf(stderr, "Bye!\n");

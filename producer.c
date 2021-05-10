@@ -25,10 +25,6 @@ se debe desplegar un mensaje a la consola describiendo la acción realizada inc
 vivos al instante de este evento.
 */
 
-/* 
-pshm_ucase_send.c
-Licensed under GNU General Public License v2 or later.
-*/
 #include <time.h>
 #include <string.h>
 #include "pshm_ucase.h"
@@ -36,8 +32,7 @@ Licensed under GNU General Public License v2 or later.
 int
 main(int argc, char *argv[])
 {
-    time_t t;
-    srand((unsigned) time(&t));
+    srand((unsigned)time(NULL));
 
     if (argc != 3) {
         fprintf(stderr, "Usage: %s /shm-path string\n", argv[0]);
@@ -45,10 +40,7 @@ main(int argc, char *argv[])
     }
 
     char *shmpath = argv[1];
-    char *string = argv[2];
-    
-    time_t now = time(NULL);
-    size_t len = strlen(string);
+    int mean = atoi(argv[2]);
 
     int fd = shm_open(shmpath, O_RDWR, 0);
     if (fd == -1)
@@ -79,6 +71,10 @@ main(int argc, char *argv[])
             errExit("sem_wait");
         }
 
+        // Add to log
+        shmp->log[shmp->cnt_gbl] = msg1;
+        shmp->cnt_gbl++;
+
         shmp->buf[shmp->tl] = msg1;
         fprintf(stderr, "Message posted!\n Position: %d \n PID:%d\n", shmp->tl, msg1.id);
         
@@ -99,7 +95,7 @@ main(int argc, char *argv[])
             errExit("sem_post");
        
 
-        sleep(rand() % 10);
+        sleep(ran_expo((double)mean));
         
     }
     

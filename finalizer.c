@@ -48,13 +48,22 @@ main(int argc, char *argv[])
     /* Wait for 'sem1' to be posted by peer before touching
         shared memory. */
 
-    if (sem_wait(&shmp->sem1) == -1){
-        errExit("sem_wait");
-    }
+    // if (sem_wait(&shmp->sem1) == -1){
+    //     errExit("sem_wait");
+    // }
     
     shmp->exit = 1;
     
     if (sem_post(&shmp->sem1) == -1){
+        errExit("sem_post");
+    }
+    if (sem_post(&shmp->sem2) == -1){
+        errExit("sem_post");
+    }
+    if (sem_post(&shmp->sem3) == -1){
+        errExit("sem_post");
+    }
+    if (sem_post(&shmp->sem4) == -1){
         errExit("sem_post");
     }
             
